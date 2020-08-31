@@ -76,7 +76,8 @@ function installQuestions() {
 
 	# Detect public interface and pre-fill for the user
 	SERVER_NIC="$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)"
-	echo "Public interface: " ${SERVER_NIC}
+	SERVER_PUB_NIC=$SERVER_NIC
+	echo "Public interface: " ${SERVER_PUB_NIC}
 
 	SERVER_WG_NIC=wg0
 	echo "WireGuard interface name: " $SERVER_WG_NIC
@@ -218,29 +219,11 @@ function newClient() {
 		exit 1
 	fi
 
-	until [[ ${IPV4_EXISTS} == '0' ]]; do
-		read -rp "Client's WireGuard IPv4: ${SERVER_WG_IPV4::-1}" -e -i "${DOT_IP}" DOT_IP
-		CLIENT_WG_IPV4="${SERVER_WG_IPV4::-1}${DOT_IP}"
-		IPV4_EXISTS=$(grep -c "$CLIENT_WG_IPV4" "/etc/wireguard/${SERVER_WG_NIC}.conf")
+	CLIENT_WG_IPV4="${SERVER_WG_IPV4::-1}${DOT_IP}"
+	echo "Client's WireGuard IPv4: " $CLIENT_WG_IPV4
 
-		if [[ ${IPV4_EXISTS} == '1' ]]; then
-			echo ""
-			echo "A client with the specified IPv4 was already created, please choose another IPv4."
-			echo ""
-		fi
-	done
-
-	until [[ ${IPV6_EXISTS} == '0' ]]; do
-		read -rp "Client's WireGuard IPv6: ${SERVER_WG_IPV6::-1}" -e -i "${DOT_IP}" DOT_IP
-		CLIENT_WG_IPV6="${SERVER_WG_IPV6::-1}${DOT_IP}"
-		IPV6_EXISTS=$(grep -c "${CLIENT_WG_IPV6}" "/etc/wireguard/${SERVER_WG_NIC}.conf")
-
-		if [[ ${IPV6_EXISTS} == '1' ]]; then
-			echo ""
-			echo "A client with the specified IPv6 was already created, please choose another IPv6."
-			echo ""
-		fi
-	done
+	CLIENT_WG_IPV6="${SERVER_WG_IPV6::-1}${DOT_IP}"
+	echo "Client's WireGuard IPv6: " $CLIENT_WG_IPV6
 
 	# Generate key pair for the client
 	CLIENT_PRIV_KEY=$(wg genkey)
